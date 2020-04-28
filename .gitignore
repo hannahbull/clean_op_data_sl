@@ -1,4 +1,4 @@
 output/*
 skeleton_keypoints/*
-*.pyc
-*.idea/
+__pycache__/
+.idea/
