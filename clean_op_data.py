@@ -66,7 +66,7 @@ list_op_files = sorted(list_op_files)
 full_dict = get_full_dict(list_op_files=list_op_files, data_location=openpose_folder, width=width_video, height=height_video, fps=fps, tolerance=tracking_threshold)
 
 #### get scenes = group of frames with same people in consecutive frames
-scene_changes = []
+scene_changes = [0]
 for fno in range(len(full_dict)):
     temp_sc = 1
     for pno in range(len(full_dict[fno]) - 1):  ## minus 1 due to adding number of people in dict
