@@ -1,0 +1,15 @@
+openpose_folder: 'skeleton_keypoints/'
+output_folder: 'output/'
+
+max_number_signers: 2
+
+fps: 25
+convert_to_25fps: False
+
+height_video: 1080
+width_video: 1920
+
+hand_motion_threshold: 0.0005
+hand_size_threshold: 0.01
+tracking_threshold: 1
+min_length_segment: 0.25
