@@ -1,2 +1,4 @@
 output/*
 skeleton_keypoints/*
+*.pyc
+*.idea/
