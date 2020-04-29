@@ -148,7 +148,7 @@ for s in scenes:
         else:
             break
 
-    if len(data_list>0):
+    if len(data_list)>0:
         # sort by stats
         stats_list_rank = np.argsort(np.array([-stats_list[i][-1] for i in range(len(stats_list))]))
         data_list = [data_list[i] for i in stats_list_rank]
