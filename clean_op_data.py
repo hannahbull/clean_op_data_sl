@@ -188,7 +188,13 @@ for s in scenes:
                     pnos[start_frame:end_frame, j] = data_list[i][1]
                     break
 
+        #### trip upper and lower bounds of kept scene
+        pnos_trim = [i for i in range(0, pnos.shape[0]) if np.max(pnos, axis=1)[i] != -1]
+        pnos_bounds = np.arange(min(pnos_trim), max(pnos_trim) + 1)
 
+        fnos = fnos[pnos_bounds]
+        pnos = pnos[pnos_bounds]
+        data_numpy = data_numpy[min(pnos_trim):(max(pnos_trim) + 1), :, :, :]
 
         ### convert to 25 fps at end
         if (fps>=28 and fps <=32 and convert_to_25fps==True):
@@ -218,3 +224,4 @@ for s in scenes:
         pickle.dump(final_data, open(
             output_folder + str(fnos[0]) + '_' + str(
                 data_numpy.shape[0]) + '_data.pkl', 'wb'))
+
