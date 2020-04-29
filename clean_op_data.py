@@ -82,6 +82,7 @@ for i in range(len(scene_changes)-1):
     if scene_changes_diff[i]>fps*min_length_segment: ### don't follow if less than min length segment
         scenes.append([scene_changes[i], scene_changes[i+1]])
 
+print('scenes ', scenes)
 ### loop over scenes
 for s in scenes:
 
@@ -147,90 +148,72 @@ for s in scenes:
         else:
             break
 
-    if (len(stats_list)>max_number_signers):
-        stats_list_rank = np.argsort(np.array([-stats_list[i][-1] for i in range(len(stats_list))]))
-        data_list_reduced = [data_list[i] for i in stats_list_rank[0:max_number_signers]]
-    else:
-        data_list_reduced = data_list
-
+    # sort by stats
+    stats_list_rank = np.argsort(np.array([-stats_list[i][-1] for i in range(len(stats_list))]))
+    data_list = [data_list[i] for i in stats_list_rank]
 
     ### clean op data by interpolating using then with savgol filter
     imputer = KNNImputer(n_neighbors=fps // 11, weights="uniform") ## n neighbours is basically = 2
-    for i in range(len(data_list_reduced)):
-        for j in range(data_list_reduced[i][2].shape[1]):
-            for k in range(data_list_reduced[i][2].shape[2]):
+    for i in range(len(data_list)):
+        for j in range(data_list[i][2].shape[1]):
+            for k in range(data_list[i][2].shape[2]):
                 if j!=2:
                     ### make all score 0s NA
-                    mask = [1 if not (data_list_reduced[i][2][:,2,k,:]==0)[l] else np.nan for l in range(data_list_reduced[i][2].shape[0])]
+                    mask = [1 if not (data_list[i][2][:,2,k,:]==0)[l] else np.nan for l in range(data_list[i][2].shape[0])]
                     if (1 in mask): ## if not all NA
-                        data_list_reduced[i][2][:,j,k,:] = imputer.fit_transform(data_list_reduced[i][2][:,j,k,:]*np.array(mask).reshape(-1,1))
+                        data_list[i][2][:,j,k,:] = imputer.fit_transform(data_list[i][2][:,j,k,:]*np.array(mask).reshape(-1,1))
 
-                data_list_reduced[i][2][:,j,k,0] = savgol_filter(data_list_reduced[i][2][:,j,k,0],
+                data_list[i][2][:,j,k,0] = savgol_filter(data_list[i][2][:,j,k,0],
                                                                  window_length=13,
                                                                  polyorder=2,
                                                                  mode='mirror')
 
-    ### get full fnos and pad with 0s so that all are the same length
-    ### this is because the tracking of a person can be less than the length of a scene
-    min_fno = len(list_op_files)
-    max_fno = 0
-    for i in range(len(data_list_reduced)):
-        min_fno = min(min_fno, data_list_reduced[i][0][0])
-        max_fno = max(max_fno, data_list_reduced[i][0][-1])
+    ### stack data. Data list contained ranked sequences of people. Fit people into the top non-zero slot until max signers
+    ### is reached
+    fnos = np.arange(s[0],s[1]+1)
+    pnos = -np.ones((len(fnos),max_number_signers))
 
-    fnos = np.arange(min_fno, max_fno+1)
+    data_numpy = np.zeros((len(fnos),
+                           data_list[0][2].shape[1],
+                           data_list[0][2].shape[2],
+                           max_number_signers))
 
-    for i in range(len(data_list_reduced)):
-        if (data_list_reduced[i][2].shape[0] < len(fnos)):
-            if (data_list_reduced[i][0][0]>fnos[0]):
-                df_to_add = np.zeros((data_list_reduced[i][0][0]-fnos[0],
-                                      data_list_reduced[i][2].shape[1],
-                                      data_list_reduced[i][2].shape[2],
-                                      data_list_reduced[i][2].shape[3]))
-                data_list_reduced[i][2] = np.concatenate((df_to_add, data_list_reduced[i][2]))
-            if (data_list_reduced[i][0][-1]<fnos[-1]):
-                df_to_add = np.zeros((fnos[-1] - data_list_reduced[i][0][-1],
-                                      data_list_reduced[i][2].shape[1],
-                                      data_list_reduced[i][2].shape[2],
-                                      data_list_reduced[i][2].shape[3]))
-                data_list_reduced[i][2] = np.concatenate((data_list_reduced[i][2], df_to_add))
+    for i in range(len(data_list)):
+        start_frame = int(data_list[i][0][0] - fnos[0])
+        end_frame = int(data_list[i][0][0] - fnos[0] + data_list[i][2].shape[0])
+        for j in range(max_number_signers):
+            if np.max(data_numpy[start_frame:end_frame,:,:,j])==0: ### if all zeros then add, else go on to next signer slot
+                data_numpy[start_frame:end_frame, :, :, j] = data_list[i][2][:,:,:,0]
+                pnos[start_frame:end_frame, j] = data_list[i][1]
+                break
+
+
 
     ### convert to 25 fps at end
     if (fps>=28 and fps <=32 and convert_to_25fps==True):
-        for i in range(len(data_list_reduced)):
-            conv_data_list_red = np.zeros((len([1 for n in range(data_list_reduced[i][2].shape[0]-1) if n % 6 != 5]),
-                                           data_list_reduced[i][2].shape[1],
-                                           data_list_reduced[i][2].shape[2],
-                                           data_list_reduced[i][2].shape[3]))
+        for i in range(len(data_list)):
+            conv_data_list_red = np.zeros((len([1 for n in range(data_numpy.shape[0]-1) if n % 6 != 5]),
+                                           data_numpy.shape[1],
+                                           data_numpy.shape[2],
+                                           data_numpy.shape[3]))
             for j in range(3):
                 for k in range(127):
                     if (j!=2):
-                        conv_data_list_red[:, j, k, 0] = convert_30_25_fps(data_list_reduced[i][2][:, j, k, 0],
-                                                                                scores = data_list_reduced[i][2][:, 2, k, 0],
+                        conv_data_list_red[:, j, k, 0] = convert_30_25_fps(data_numpy[:, j, k, 0],
+                                                                                scores = data_numpy[:, 2, k, 0],
                                                                                 labels = False)
                     else:
-                        conv_data_list_red[:, j, k, 0] = convert_30_25_fps(data_list_reduced[i][2][:, j, k, 0],
+                        conv_data_list_red[:, j, k, 0] = convert_30_25_fps(data_numpy[:, j, k, 0],
                                                                                 scores = None,
                                                                                 labels = False)
-            data_list_reduced[i][2] = conv_data_list_red
+            data_numpy = conv_data_list_red
 
-    ### stack correctly
-    if (len(data_list_reduced)>0):
-        data_numpy = np.zeros((data_list_reduced[0][2].shape[0],
-                               data_list_reduced[0][2].shape[1],
-                               data_list_reduced[0][2].shape[2],
-                               max_number_signers))
-        for i in range(len(data_list_reduced)):
-            data_numpy[:,:,:,i] = data_list_reduced[i][2][:,:,:,0]
+    ## data numpy has shape time*3=(x,y,confidence)*127 keypoints*number signers
+    final_data = [fnos, pnos, data_numpy]
 
-        pnos = [data_list_reduced[i][1] for i in range(len(data_list_reduced))]
-
-        ## data numpy has shape time*3=(x,y,confidence)*127 keypoints*number signers
-        final_data = [fnos, pnos, data_numpy]
-
-        ### save using first frame number, first person numbr and length of sequence in # frames
-        print('saving '+output_folder + str(fnos[0]) + '_' + str(pnos[0][0]) + '_' + str(
-                data_numpy.shape[0]) + '_data.pkl')
-        pickle.dump(final_data, open(
-            output_folder + str(fnos[0]) + '_' + str(pnos[0][0]) + '_' + str(
-                data_numpy.shape[0]) + '_data.pkl', 'wb'))
+    ### save using first frame number, first person numbr and length of sequence in # frames
+    print('saving '+output_folder + str(fnos[0]) + '_' + str(
+            data_numpy.shape[0]) + '_data.pkl')
+    pickle.dump(final_data, open(
+        output_folder + str(fnos[0]) + '_' + str(
+            data_numpy.shape[0]) + '_data.pkl', 'wb'))
