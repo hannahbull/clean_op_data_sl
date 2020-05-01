@@ -76,7 +76,7 @@ def tracking_openpose(op_data_1, width, height, fps, data_location, list_op_file
 
 
 def get_full_dict(list_op_files, data_location, width, height, fps, tolerance):
-    print('Getting full dictionary')
+    print('Getting graph of relations between people across frames')
     full_dict = {}
     for starting_file_number in tqdm(range(len(list_op_files) - 1)):
         ### open op file for initialisation
@@ -87,14 +87,13 @@ def get_full_dict(list_op_files, data_location, width, height, fps, tolerance):
             full_dict[starting_file_number] = {}
         if starting_file_number + 1 not in full_dict.keys():
             full_dict[starting_file_number + 1] = {}
-        full_dict[starting_file_number]['number_of_people'] = no_people_opdata
         for person_number in range(no_people_opdata):
             data_dict = tracking_openpose(op_data_1, width, height, fps, data_location, list_op_files, starting_file_number,
                                           person_number, length_of_segment=2, tolerance=tolerance, forwards=True)
 
             if len(data_dict) >= 1:
                 ## add current person if not already added
-                if person_number not in list(full_dict[starting_file_number].keys())[1:]:
+                if person_number not in list(full_dict[starting_file_number].keys()):
                     full_dict[starting_file_number][person_number] = {}
                     full_dict[starting_file_number][person_number]['pose'] = data_dict['data'][0]['skeleton'][0][
                         'pose']

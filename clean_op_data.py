@@ -69,7 +69,7 @@ full_dict = get_full_dict(list_op_files=list_op_files, data_location=openpose_fo
 scene_changes = [0]
 for fno in range(len(full_dict)):
     temp_sc = 1
-    for pno in range(len(full_dict[fno]) - 1):  ## minus 1 due to adding number of people in dict
+    for pno in list(full_dict[fno].keys()):
         if not np.isnan(full_dict[fno][pno]['next_person']): ## if there is a next person for someone in frame
             temp_sc = 0
     if temp_sc == 1:
@@ -88,7 +88,7 @@ for s in scenes:
     ### get a list of people and frames in scene
     list_frames_people = []
     for fno in range(s[0],s[1]):
-        for pno in range(len(full_dict[fno]) - 1):  ## minus 1 due to adding number of people in dict
+        for pno in list(full_dict[fno].keys()):  ## minus 1 due to adding number of people in dict
             list_frames_people.append([fno, pno])
 
     data_list = []
