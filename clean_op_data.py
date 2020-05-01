@@ -82,7 +82,6 @@ for i in range(len(scene_changes)-1):
     if scene_changes_diff[i]>fps*min_length_segment: ### don't follow if less than min length segment
         scenes.append([scene_changes[i], scene_changes[i+1]])
 
-print('scenes ', scenes)
 ### loop over scenes
 for s in scenes:
 
