@@ -196,7 +196,7 @@ for s in scenes:
         data_numpy = data_numpy[min(pnos_trim):(max(pnos_trim) + 1), :, :, :]
 
         ### convert to 25 fps at end
-        if (fps>=28 and fps <=32 and convert_to_25fps==True):
+        if (fps>=28 and fps <=32 and convert_to_25fps):
             for i in range(len(data_list)):
                 conv_data_list_red = np.zeros((len([1 for n in range(data_numpy.shape[0]-1) if n % 6 != 5]),
                                                data_numpy.shape[1],
