@@ -26,6 +26,8 @@ parser.add_argument('--tracking_threshold', type=float, default=1.,
                     help='tracking_threshold/fps is the maximum distance a person can move between two frames')
 parser.add_argument('--min_length_segment', type=float, default=0.25,
                     help='The minimum length of segment in seconds')
+parser.add_argument('--savgol_window', type=float, default=7,
+                    help='The window length of the SavGol filter (put 0 for none)')
 
 args = parser.parse_args()
 args_list = vars(args)
@@ -54,6 +56,8 @@ hand_size_threshold = args_list['hand_size_threshold']
 
 tracking_threshold = args_list['tracking_threshold']
 min_length_segment = args_list['min_length_segment']
+
+savgol_window = args_list['savgol_window']
 
 #### get list of openpose files from folder files
 list_op_files = []
@@ -163,10 +167,11 @@ for s in scenes:
                         if (1 in mask): ## if not all NA
                             data_list[i][2][:,j,k,:] = imputer.fit_transform(data_list[i][2][:,j,k,:]*np.array(mask).reshape(-1,1))
 
-                    data_list[i][2][:,j,k,0] = savgol_filter(data_list[i][2][:,j,k,0],
-                                                                     window_length=13,
-                                                                     polyorder=2,
-                                                                     mode='mirror')
+                    if (savgol_window>0):
+                        data_list[i][2][:,j,k,0] = savgol_filter(data_list[i][2][:,j,k,0],
+                                                                         window_length=savgol_window,
+                                                                         polyorder=2,
+                                                                         mode='mirror')
 
         ### stack data. Data list contained ranked sequences of people. Fit people into the top non-zero slot until max signers
         ### is reached

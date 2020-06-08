@@ -13,3 +13,5 @@ hand_motion_threshold: 0.0005
 hand_size_threshold: 0.01
 tracking_threshold: 1
 min_length_segment: 0.25
+
+savgol_window: 7
