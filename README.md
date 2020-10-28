@@ -30,4 +30,6 @@ Frame numbers, person numbers and numpy array of the skeleton keypoints for each
 
 OpenPose: [https://github.com/CMU-Perceptual-Computing-Lab/openpose](https://github.com/CMU-Perceptual-Computing-Lab/openpose)
 
+# Automatic Segmentation of Sign Language Video into sentence-like units
 
+See [https://github.com/hannahbull/sign_language_segmentation](https://github.com/hannahbull/sign_language_segmentation)
