@@ -225,7 +225,7 @@ for s in scenes:
         ### save using first frame number, first person numbr and length of sequence in # frames
         print('saving '+output_folder + str(fnos[0]) + '_' + str(
                 data_numpy.shape[0]) + '_data.pkl')
-        pickle.dump(final_data, open(
-            output_folder + str(fnos[0]) + '_' + str(
-                data_numpy.shape[0]) + '_data.pkl', 'wb'))
+        pickle.dump(final_data, open(os.path.join(
+            output_folder, str(fnos[0]) + '_' + str(
+                data_numpy.shape[0]) + '_data.pkl'), 'wb'))
 
