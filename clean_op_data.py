@@ -33,11 +33,11 @@ args = parser.parse_args()
 args_list = vars(args)
 
 if args_list['config'] is not None:
-    print('WARNING: In case of conflict, .yaml arguments override command line arguments')
+    print('WARNING: In case of conflict, command line arguments override .yaml arguments')
     with open(args_list['config']) as file:
         args_list_yml = yaml.load(file, Loader=yaml.FullLoader)
 
-    args_list = {**args_list, **args_list_yml} ### the second list overwrites the first
+    args_list = {**args_list_yml, **args_list} ### the second list overwrites the first
 
 print(args_list)
 
@@ -222,11 +222,9 @@ for s in scenes:
         ## data numpy has shape time*3=(x,y,confidence)*127 keypoints*number signers
         final_data = [fnos, pnos, data_numpy]
 
-        ### save using first frame number, first person numbr and length of sequence in # frames
-        print('saving '+open(os.path.join(
-            output_folder, str(fnos[0]) + '_' + str(
-                data_numpy.shape[0]) + '_data.pkl'))
-        pickle.dump(final_data, open(os.path.join(
-            output_folder, str(fnos[0]) + '_' + str(
-                data_numpy.shape[0]) + '_data.pkl'), 'wb'))
+        ### make folder if not exists
+        os.makedirs(output_folder, exist_ok=True)
 
+        ### save using first frame number, first person numbr and length of sequence in # frames
+        print('saving '+os.path.join(output_folder, str(fnos[0]) + '_' + str(data_numpy.shape[0]) + '_data.pkl'))
+        pickle.dump(final_data, open(os.path.join(output_folder, str(fnos[0]) + '_' + str(data_numpy.shape[0]) + '_data.pkl'), 'wb'))
